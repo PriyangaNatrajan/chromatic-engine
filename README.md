@@ -142,5 +142,4 @@ Web/graphic design tools
 
 This project was built as a complete, modular demonstration of applying Genetic Algorithms to color optimization, showcasing both computational design and frontend engineering.
 
-Educational demos for GAs and color theory
 
