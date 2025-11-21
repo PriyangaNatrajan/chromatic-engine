@@ -38,10 +38,6 @@ The backend is implemented using Python and Flask, serving palette generation an
 
 ---
 
-## Project Structure
-
----
-
 ## Installation & Running
 
 ### 1. Backend (Flask API)
