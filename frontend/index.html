@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chromatic Engine — GA Palette Optimizer</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="page">
+
+    <header class="hero">
+      <div class="chromosome" aria-hidden="true">
+        <div class="gene g1"></div>
+        <div class="gene g2"></div>
+        <div class="gene g3"></div>
+        <div class="gene g4"></div>
+        <div class="gene g5"></div>
+      </div>
+
+      <h1 class="title" aria-live="polite">
+        <span id="typed-title"></span><span class="blink">|</span>
+      </h1>
+
+      <p class="subtitle">A genetic algorithm optimization engine for professional color systems and design workflows.</p>
+    </header>
+
+    <section class="controls" role="region" aria-label="Optimization controls">
+      <h2>Optimization Dashboard</h2>
+
+      <div class="controls-row">
+        <button id="generateBtn" class="btn primary">Generate Palette</button>
+
+        <div class="inline">
+          <label for="baseColor" class="muted">Base color (optional)</label>
+          <input id="baseColor" type="color" value="#ffcc00" title="Pick a base color" />
+        </div>
+
+        <div class="inline">
+          <label for="modeSelect" class="muted">Mode</label>
+          <select id="modeSelect">
+            <option value="default" selected>Balanced</option>
+            <option value="pastel">Pastel</option>
+            <option value="vibrant">Vibrant</option>
+            <option value="neon">Neon</option>
+            <option value="earthy">Earthy</option>
+            <option value="mono">Monochrome</option>
+            <option value="gradient">Gradient</option>
+          </select>
+        </div>
+
+        <button id="historyBtn" class="btn ghost">Show Convergence</button>
+      </div>
+
+      <div class="settings">
+        <label>Palette size
+          <select id="paletteSize">
+            <option value="5" selected>5</option>
+            <option value="4">4</option>
+            <option value="6">6</option>
+          </select>
+        </label>
+
+        <label>Population
+          <input id="popSize" type="number" min="10" max="300" value="120" />
+        </label>
+
+        <label>Generations
+          <input id="generations" type="number" min="5" max="400" value="60" />
+        </label>
+      </div>
+    </section>
+
+    <section class="results" aria-live="polite">
+      <div id="palettes" class="palettes"></div>
+    </section>
+
+    <section id="chartSection" class="chart-section hidden" aria-hidden="true">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Fitness Convergence</h3>
+          <button id="closeChart" class="btn small">Close</button>
+        </div>
+        <canvas id="fitnessChart" width="900" height="320"></canvas>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <small>Chromatic Engine • Genetic Palette Optimization</small>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
