@@ -1,9 +1,7 @@
 import numpy as np
 import colorsys
 
-# -------------------------------------------------
-# RGB → XYZ → LAB (Pure NumPy, no scikit-image)
-# -------------------------------------------------
+
 
 def rgb_to_xyz(rgb):
     rgb = np.array(rgb)
