@@ -1,15 +1,24 @@
 # backend/app.py
-from flask import Flask, jsonify, request
+import os
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from .ga import PaletteGA
 
-app = Flask(__name__)
+# app = Flask(__name__)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+app = Flask(
+    __name__,
+    static_folder=os.path.join(BASE_DIR, "frontend"),
+    static_url_path=""
+)
 CORS(app)   # Enable CORS for all routes
 
 
 @app.route("/")
-def home():
-    return "GA Palette Generator API is running. Use /generate"
+def serve_frontend():
+    return send_from_directory(app.static_folder, "index.html")
+
 
 
 @app.route("/generate", methods=["POST"])
@@ -70,5 +79,4 @@ def generate_history():
     return jsonify({"history": history})
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+
