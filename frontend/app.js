@@ -1,23 +1,23 @@
-/* frontend app.js
-   Matches backend endpoints defined in backend/app.py (POST /generate and POST /generate_history).
-   If your backend is on a different host/port change BACKEND_URL below.
+/* frontend/app.js
+   Matches backend endpoints defined in backend/app.py
+   Uses RELATIVE URLs for PythonAnywhere deployment
 */
-
-const BACKEND_URL = "http://127.0.0.1:5000"; // matches backend/app.py default. :contentReference[oaicite:4]{index=4}
 
 const TITLE = "Chromatic Engine";
 const typed = document.getElementById("typed-title");
+
+/* Typing effect */
 (function typeTitle(){
-  let i=0, speed=45;
+  let i = 0, speed = 45;
   function step(){
     typed.textContent = TITLE.slice(0, i);
     i++;
-    if(i <= TITLE.length) setTimeout(step, speed);
+    if (i <= TITLE.length) setTimeout(step, speed);
   }
   step();
 })();
 
-/* DOM refs */
+/* DOM references */
 const generateBtn = document.getElementById("generateBtn");
 const historyBtn = document.getElementById("historyBtn");
 const palettesContainer = document.getElementById("palettes");
@@ -32,7 +32,7 @@ const fitnessCanvas = document.getElementById("fitnessChart");
 const closeChart = document.getElementById("closeChart");
 let fitnessChart = null;
 
-/* render placeholder */
+/* Render palettes */
 function renderPalettes(list){
   palettesContainer.innerHTML = "";
   list.forEach(p => {
@@ -50,7 +50,7 @@ function renderPalettes(list){
       s.addEventListener("click", () => {
         navigator.clipboard?.writeText(h);
         s.style.outline = "3px solid rgba(255,255,255,0.14)";
-        setTimeout(()=> s.style.outline = "", 800);
+        setTimeout(() => s.style.outline = "", 800);
       });
       swatches.appendChild(s);
     });
@@ -70,65 +70,78 @@ function renderPalettes(list){
   });
 }
 
-/* call backend /generate (POST) - matches backend/app.py payload keys (mode, base_color, optionally n_colors etc.) */
-async function fetchGenerate(baseColor=null){
+/* Call backend /generate */
+async function fetchGenerate(baseColor = null){
   const payload = {
     mode: modeSelect.value || "default",
-    base_color: baseColor || null,
+    base_color: baseColor,
     n_colors: parseInt(paletteSizeInput.value, 10),
     pop_size: parseInt(popInput.value, 10),
     generations: parseInt(gensInput.value, 10)
   };
 
   try{
-    const res = await fetch(`${BACKEND_URL}/generate`, {
+    const res = await fetch("/generate", {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    if(!res.ok){
+
+    if (!res.ok) {
       const t = await res.text();
       console.error("Server error:", t);
-      alert("Server error while generating. See console.");
+      alert("Server error while generating palettes.");
       return;
     }
+
     const data = await res.json();
-    // expect { palettes: [ {hex:[...], score:...}, ... ] }
-    if(!data.palettes) { console.error("Unexpected response:", data); alert("Unexpected response."); return; }
+    if (!data.palettes) {
+      console.error("Unexpected response:", data);
+      alert("Unexpected server response.");
+      return;
+    }
+
     renderPalettes(data.palettes);
-  }catch(err){
+
+  } catch (err) {
     console.error("Network error:", err);
-    alert("Network error. Is the backend running on port 5000?");
+    alert("Network error while contacting the server.");
   }
 }
 
-/* fetch history from backend /generate_history (POST) */
-async function fetchHistory(baseColor=null){
+/* Call backend /generate_history */
+async function fetchHistory(baseColor = null){
   const payload = {
     mode: modeSelect.value || "default",
-    base_color: baseColor || null,
+    base_color: baseColor,
     n_colors: parseInt(paletteSizeInput.value, 10),
     pop_size: parseInt(popInput.value, 10),
     generations: parseInt(gensInput.value, 10)
   };
 
   try{
-    const res = await fetch(`${BACKEND_URL}/generate_history`, {
+    const res = await fetch("/generate_history", {
       method: "POST",
-      headers: {"Content-Type":"application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    if(!res.ok){
+
+    if (!res.ok) {
       const t = await res.text();
-      console.error("Server error (history):", t);
-      alert("Server error while fetching history. See console.");
+      console.error("History error:", t);
+      alert("Server error while fetching history.");
       return;
     }
+
     const json = await res.json();
-    const history = json.history;
-    if(!Array.isArray(history)){ console.error("Invalid history:", json); return; }
-    showChart(history);
-  }catch(err){
+    if (!Array.isArray(json.history)) {
+      console.error("Invalid history:", json);
+      return;
+    }
+
+    showChart(json.history);
+
+  } catch (err) {
     console.error("History fetch failed:", err);
     alert("Network error retrieving history.");
   }
@@ -137,40 +150,33 @@ async function fetchHistory(baseColor=null){
 /* Chart rendering */
 function showChart(history){
   chartSection.classList.remove("hidden");
-  chartSection.setAttribute("aria-hidden","false");
 
   const labels = history.map(h => `Gen ${h.generation}`);
-  const maxs = history.map(h => h.max_fitness ?? h.max ?? null);
-  const means = history.map(h => h.mean_fitness ?? h.mean ?? null);
-  const mins = history.map(h => h.min_fitness ?? h.min ?? null);
+  const maxs = history.map(h => h.max_fitness);
+  const means = history.map(h => h.mean_fitness);
+  const mins = history.map(h => h.min_fitness);
 
   const ctx = fitnessCanvas.getContext("2d");
-  if(fitnessChart) fitnessChart.destroy();
+  if (fitnessChart) fitnessChart.destroy();
 
   fitnessChart = new Chart(ctx, {
     type: "line",
     data: {
       labels,
       datasets: [
-        { label: "Max fitness", data: maxs, borderColor: "#3be6d1", tension:0.25, fill:false, pointRadius:0 },
-        { label: "Mean fitness", data: means, borderColor: "#7aa8ff", tension:0.25, fill:false, pointRadius:0 },
-        { label: "Min fitness", data: mins, borderColor: "#ffa76b", tension:0.25, fill:false, pointRadius:0 }
+        { label: "Max Fitness", data: maxs, borderColor: "#3be6d1", tension: 0.25, fill: false },
+        { label: "Mean Fitness", data: means, borderColor: "#7aa8ff", tension: 0.25, fill: false },
+        { label: "Min Fitness", data: mins, borderColor: "#ffa76b", tension: 0.25, fill: false }
       ]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: "top", labels:{color:"#cfe9ee"} } },
-      scales: { x: { ticks:{color:"#cfe9ee"} }, y: { ticks:{color:"#cfe9ee"} } }
     }
   });
 }
 
-/* Event wiring */
+/* Event bindings */
 generateBtn.addEventListener("click", async () => {
   generateBtn.disabled = true;
   generateBtn.textContent = "Generating...";
-  const base = baseColorInput.value || null;
-  await fetchGenerate(base);
+  await fetchGenerate(baseColorInput.value || null);
   generateBtn.disabled = false;
   generateBtn.textContent = "Generate Palette";
 });
@@ -178,38 +184,20 @@ generateBtn.addEventListener("click", async () => {
 historyBtn.addEventListener("click", async () => {
   historyBtn.disabled = true;
   historyBtn.textContent = "Loading...";
-  const base = baseColorInput.value || null;
-  await fetchHistory(base);
+  await fetchHistory(baseColorInput.value || null);
   historyBtn.disabled = false;
   historyBtn.textContent = "Show Convergence";
 });
 
 closeChart.addEventListener("click", () => {
   chartSection.classList.add("hidden");
-  chartSection.setAttribute("aria-hidden","true");
-  if(fitnessChart) fitnessChart.destroy();
+  if (fitnessChart) fitnessChart.destroy();
 });
 
-/* initial placeholder palette */
+/* Initial placeholder */
 document.addEventListener("DOMContentLoaded", () => {
   renderPalettes([{
-    hex:["#E1B0E8","#FF00FF","#000000","#FFFF00","#00FFFF"],
+    hex: ["#E1B0E8", "#FF00FF", "#000000", "#FFFF00", "#00FFFF"],
     score: 0.0
   }]);
-});
-document.addEventListener("DOMContentLoaded", () => {
-    const title = "GENETIC PALETTE OPTIMIZER";
-    const el = document.getElementById("typing-title");
-
-    let idx = 0;
-
-    function typeWriter() {
-        if (idx < title.length) {
-            el.textContent += title.charAt(idx);
-            idx++;
-            setTimeout(typeWriter, 80); // typing speed
-        }
-    }
-
-    typeWriter();
 });
